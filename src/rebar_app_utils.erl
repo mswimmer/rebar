@@ -45,16 +45,24 @@ is_app_dir() ->
     is_app_dir(rebar_utils:get_cwd()).
 
 is_app_dir(Dir) ->
-    AppSrc = filename:join([Dir, "src", "*.app.src"]),
+    SrcDir = filename:join([Dir, "src"]),
+    AppSrc = filename:join([SrcDir, "*.app.src"]),
     case filelib:wildcard(AppSrc) of
+        [_, _ | _] ->
+            ?ERROR("More than one .app.src file in ~s~n", [SrcDir]),
+            false;
         [AppSrcFile] ->
             {true, AppSrcFile};
-        _ ->
-            App = filename:join([Dir, "ebin", "*.app"]),
+        [] ->
+            EbinDir = filename:join([Dir, "ebin"]),
+            App = filename:join([EbinDir, "*.app"]),
             case filelib:wildcard(App) of
+                [_, _ | _] ->
+                    ?ERROR("More than one .app file in ~s~n", [EbinDir]),
+                    false;
                 [AppFile] ->
                     {true, AppFile};
-                _ ->
+                [] ->
                     false
             end
     end.
